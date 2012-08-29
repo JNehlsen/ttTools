@@ -1,5 +1,7 @@
-#This project is more or less abandoned
-## Sorry
+#I picked this project up because I liked what it was doing. I will do my best to keep it updated as TT changes.
+
+#I know next to nothing about chrome extensions, so that may not work for the time-being. The bookmarklet does.
+
 
 # ttTools
 ## All the stuff you wish turntable.fm already had.
