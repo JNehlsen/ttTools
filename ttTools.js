@@ -291,7 +291,7 @@ ttTools = {
   idleIndicator : {
     threshold : function () {
       var threshold = $.cookie('ttTools_idleIndicator_threshold');
-      return threshold === null ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
+      return threshold === 30 ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
     },
     setThreshold : function (threshold) {
       $.cookie('ttTools_idleIndicator_threshold', threshold);

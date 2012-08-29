@@ -154,10 +154,13 @@ div.queueView div.resultsLabel {\
 div#playlistTools {\
   left:0;\
   right:0;\
-  top:65px;\
+  top:36px;\
   height:2em;\
   padding:2px 0;\
   position:absolute;\
+}\
+div#songs {\
+  top: 64px !important;\
 }\
 div#playlistTools div { float:left; }\
 div#playlistTools label { font-size:5px; }\
@@ -172,7 +175,7 @@ div#playlistTools .custom-icons.soundcloud { background-position:34px 0; }\
       "}).appendTo(document.head);
 
       $(util.buildTree(this.tree())).insertAfter(
-        $('form.playlistSearch')
+        $('#queue-header')
       );
 
       $('div#buttons').buttonset();

@@ -682,7 +682,7 @@ ttObjects = {
   idleIndicator : {
     threshold : function () {
       var threshold = $.cookie('ttTools_idleIndicator_threshold');
-      return threshold === null ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
+      return threshold === 30 ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
     },
     setThreshold : function (threshold) {
       $.cookie('ttTools_idleIndicator_threshold', threshold);
@@ -1001,10 +1001,14 @@ div.queueView div.resultsLabel {\
 div#playlistTools {\
   left:0;\
   right:0;\
-  top:65px;\
+  top:36px;\
   height:2em;\
   padding:2px 0;\
   position:absolute;\
+  background:#ccc\
+}\
+div#songs {\
+  top: 64px !important;\
 }\
 div#playlistTools div { float:left; }\
 div#playlistTools label { font-size:5px; }\
@@ -1019,7 +1023,7 @@ div#playlistTools .custom-icons.soundcloud { background-position:34px 0; }\
       "}).appendTo(document.head);
 
       $(util.buildTree(this.tree())).insertAfter(
-        $('form.playlistSearch')
+        $('#queue-header')
       );
 
       $('div#buttons').buttonset();
@@ -1383,8 +1387,16 @@ ttTools.database = {
   },
 
   getDatabase : function () {
+  	try {
     if (this.dbHandle) { return this.dbHandle; }
     this.dbHandle = openDatabase(this.dbName, this.dbVersion, this.dbDisplayName, this.dbMaxSize);
+    } catch(e) {
+    	if (e == 2) {
+          alert("Invalid database version.");
+      } else {
+          alert("Unknown error "+e+".");
+      }
+    }
     return this.dbHandle;
   },
 
