@@ -1,6 +1,6 @@
-#I picked this project up because I liked what it was doing. I will do my best to keep it updated as TT changes.
+##I picked this project up because I liked what it was doing. I will do my best to keep it updated as TT changes.
 
-#I know next to nothing about chrome extensions, so that may not work for the time-being. The bookmarklet does.
+##I know next to nothing about chrome extensions, so that may not work for the time-being. The bookmarklet does.
 
 
 # ttTools
@@ -38,7 +38,7 @@ To add the bookmark manually:
 ## Found a bug? Want a feature?
 It's impossible to keep track of bugs and feature requests unless they're centralized. [Please submit all bugs and feature requests here.](https://github.com/egeste/ttTools/issues)
 
-## Send questions, comments, complaints, money, and spam to:
+## A big thank you to :
 Steve Regester  
 egeste@egeste.net  
 http://www.egeste.net/  
