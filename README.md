@@ -32,7 +32,8 @@ To add the bookmark manually:
 
 *   Create a bookmark in your bookmarks bar named ttTools  
 *   For the location, enter:  
-        `javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://github.com/JNehlsen/ttTools/blob/master/releases/latest/ttTools.js';})();`  
+        `javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://raw.github.com/egeste/ttTools/master/releases/latest/ttTools.js';})();
+`  
 *   After entering a turntable.fm room, click the ttTools bookmark.
 
 ## Found a bug? Want a feature?
