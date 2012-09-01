@@ -5,16 +5,16 @@ ttTools is a lightweight, small, un-intrusive plugin for turntable.fm that aims 
 
 ## Solid Feature Set
 Despite what you may have heard, ttTools is much more than an "auto-clicker". ttTools provides numerous added functions to the turntable.fm platform in a seamless, easy to use interface.  
-Guestlist Integration w/ Vote Indicators, Idle Markers, +more!
-Auto Awesome/Lame w/ Cached Switch & Cached Variable Delay
-Auto DJ w/ Cached Switch, Cached Variable Delay & Auto-Off
-Playlist Filtering
-More!
+* Guestlist Integration w/ Vote Indicators, Idle Markers, +more!
+* Auto Awesome/Lame w/ Cached Switch & Cached Variable Delay
+* Auto DJ w/ Cached Switch, Cached Variable Delay & Auto-Off
+* Playlist Filtering
+* More!
 
 ## Easy To Use
 For a drag & drop link you can simply drag this link to your bookmark bar.
 
-<a href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://raw.github.com/JNehlsen/ttTools/master/releases/latest/ttTools.js';})();">TTtools</a>
+[TTtools](<a href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://raw.github.com/JNehlsen/ttTools/master/releases/latest/ttTools.js';})();"></a>)
 
 To add the bookmark manually:
 
