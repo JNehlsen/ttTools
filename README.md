@@ -22,7 +22,7 @@ To add the bookmark manually:
 *   After entering a turntable.fm room, click the ttTools bookmark.
 
 ## Found a bug? Want a feature?
-It's impossible to keep track of bugs and feature requests unless they're centralized. [Please submit all bugs and feature requests here.](https://github.com/egeste/ttTools/issues)
+It's impossible to keep track of bugs and feature requests unless they're centralized. [Please submit all bugs and feature requests here.](https://github.com/JNehlsen/ttTools/issues)
 
 * I will do my best to keep this updated as TT changes.
 * I know next to nothing about chrome extensions, so the extension will not work for the time-being. The bookmarklet does.
