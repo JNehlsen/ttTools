@@ -1,8 +1,3 @@
-##I picked this project up because I liked what it was doing. I will do my best to keep it updated as TT changes.
-
-##I know next to nothing about chrome extensions, so that may not work for the time-being. The bookmarklet does.
-
-
 # ttTools
 ## All the stuff you wish turntable.fm already had.
 
@@ -10,23 +5,16 @@ ttTools is a lightweight, small, un-intrusive plugin for turntable.fm that aims 
 
 ## Solid Feature Set
 Despite what you may have heard, ttTools is much more than an "auto-clicker". ttTools provides numerous added functions to the turntable.fm platform in a seamless, easy to use interface.  
-[Guestlist Integration w/ Vote Indicators, Idle Markers, +more!](http://tttools.egeste.net/features/guestlist)  
-[Auto Awesome/Lame w/ Cached Switch & Cached Variable Delay](http://tttools.egeste.net/features/auto-awesome-lame)  
-[Auto DJ w/ Cached Switch, Cached Variable Delay & Auto-Off](http://tttools.egeste.net/features/auto-dj)  
-[Playlist Song Tagging & Filtering](http://tttools.egeste.net/features/tagging-filtering)  
-[Toggle Animations](http://tttools.egeste.net/features/toggle-animations)  
-[+More!](http://tttools.egeste.net/features/extras)  
+Guestlist Integration w/ Vote Indicators, Idle Markers, +more!
+Auto Awesome/Lame w/ Cached Switch & Cached Variable Delay
+Auto DJ w/ Cached Switch, Cached Variable Delay & Auto-Off
+Playlist Filtering
+More!
 
 ## Easy To Use
-ttTools is flexible and can be loaded a number of different ways, pick whichever method is easiest for you and make life easy.  
-### Google Chrome Extension
-Visit [ttTools on the The Chrome Web Store](https://chrome.google.com/webstore/detail/acbcngngbldcpfemhpibfjlmmlgohlmo) and click "Add To Chrome". ttTools should load automatically when you enter a new turntable.fm room.
+For a drag & drop link you can simply drag this link to your bookmark bar.
 
-Or if you're feeling nerdy, you can simply clone this repository and build the extension yourself with by running the following command from the project root:  
-`zip -r ttTools-loader.zip extension/*`
-
-### Bookmarklet
-For a drag & drop link you can simply drag into your bookmarks bar, visit the [official ttTools website](http://tttools.egeste.net/)  
+<a href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://raw.github.com/JNehlsen/ttTools/master/releases/latest/ttTools.js';})();">TTtools</a>
 
 To add the bookmark manually:
 
@@ -38,6 +26,11 @@ To add the bookmark manually:
 
 ## Found a bug? Want a feature?
 It's impossible to keep track of bugs and feature requests unless they're centralized. [Please submit all bugs and feature requests here.](https://github.com/egeste/ttTools/issues)
+
+I will do my best to keep this updated as TT changes.
+I know next to nothing about chrome extensions, so the extension will not work for the time-being. The bookmarklet does.
+Toggle Animations dosen't fully work, and until further notice that feature is discontinued.
+Tagging dosen't work fully, and until further notice that feature is discontinued. 
 
 ## A big thank you to :
 Steve Regester  
