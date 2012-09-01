@@ -12,9 +12,6 @@ Despite what you may have heard, ttTools is much more than an "auto-clicker". tt
 * More!
 
 ## Easy To Use
-For a drag & drop link you can simply drag this link to your bookmark bar.
-
-[TTtools](<a href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://raw.github.com/JNehlsen/ttTools/master/releases/latest/ttTools.js';})();"></a>)
 
 To add the bookmark manually:
 
