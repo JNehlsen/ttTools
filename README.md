@@ -9,9 +9,13 @@ Despite what you may have heard, ttTools is much more than an "auto-clicker". tt
 * Auto Awesome/Lame w/ Cached Switch & Cached Variable Delay
 * Auto DJ w/ Cached Switch, Cached Variable Delay & Auto-Off
 * Playlist Filtering
+* Toggle Animations
+* Organize your playlist with tags. Export and import tag lits 
 * More!
 
 ## Easy To Use
+Simple to install bookmarklet:
+* Go to The brand new ttTools website [ttTools.html-5.me](http://tttools.html-5.me/) and drag the large red button to your bookmark bar.
 
 To add the bookmark manually:
 
@@ -26,8 +30,7 @@ It's impossible to keep track of bugs and feature requests unless they're centra
 
 * I will do my best to keep this updated as TT changes.
 * I know next to nothing about chrome extensions, so the extension will not work for the time-being. The bookmarklet does.
-* <b>Toggle Animations dosen't fully work</b>, and until further notice that feature is discontinued.
-* <b>Tagging dosen't work fully</b>, and until further notice that feature is discontinued. 
+
 
 ## A big thank you to :
 Steve Regester  
