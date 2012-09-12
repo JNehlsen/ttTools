@@ -5,21 +5,25 @@ ttTools.tags.views = {
       $('<style/>', {
         type : 'text/css',
         text : "\
-div.song div.ui-icon-tag {\
+.song .ui-icon-tag{\
   margin: 0;\
-  top: 24px;\
-  right: 5px;\
+  top: -4px;\
+  right: 0;\
   width: 16px;\
   height: 16px;\
   cursor: pointer;\
   position: absolute;\
 }\
+.song .title {\
+  height: 35px !important;\
+  width: 145px;\
+}\
       "}).appendTo(document.head);
     },
 
     update : function () {
-      $('div.song div.ui-icon-tag').remove();
-      var elements = $('div.song')
+      $('.song .ui-icon-tag').remove();
+      var elements = $('.song .title')
         .unbind('click')
         .on('click', function(e) {
           ttTools.tags.views.add.render($(this).closest('.song').data('songData'));

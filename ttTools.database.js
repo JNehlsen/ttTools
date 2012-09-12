@@ -11,8 +11,16 @@ ttTools.database = {
   },
 
   getDatabase : function () {
+  	try {
     if (this.dbHandle) { return this.dbHandle; }
     this.dbHandle = openDatabase(this.dbName, this.dbVersion, this.dbDisplayName, this.dbMaxSize);
+    } catch(e) {
+    	if (e == 2) {
+          alert("Invalid database version.");
+      } else {
+          alert("Unknown error "+e+".");
+      }
+    }
     return this.dbHandle;
   },
 

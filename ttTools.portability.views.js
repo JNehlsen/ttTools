@@ -61,7 +61,7 @@ div#importProgress {\
         text : "\
 div.portability.modal.dropzone { border-style:dotted; }\
 div.portability.modal.dropzone * { visibility: hidden; }\
-div.portability.modal ul { text-align: left; }\
+div.portability.modal ul { text-align: left; padding-left:10px;}\
 div.portability.modal div.rightAlign { text-align: right; }\
       "}).appendTo($('div.portability.modal'));
 
@@ -100,7 +100,13 @@ div.portability.modal div.rightAlign { text-align: right; }\
           util.hideOverlay();
           for (var i = 0; i < e.dataTransfer.files.length; i++) {
             var file = e.dataTransfer.files[i];
+            if (typeof FileReader == "undefined") {
+            var text = "<b>Sorry</b><br />This action is not supported in your brower currently";
+            $("<div id='dialog' title='Not Supported'>" + text + "</div>").dialog();
+            return;
+            } else {
             var reader = new FileReader();
+            }
             reader.onload = function () {
               $('div#importProgress')
                 .show()
@@ -125,6 +131,7 @@ div.portability.modal div.rightAlign { text-align: right; }\
             click : util.hideOverlay
           }
         }],
+        ['br'],
         ['h1', 'Import/Export'],
         ['br'],
         ['ul', {},
@@ -132,6 +139,7 @@ div.portability.modal div.rightAlign { text-align: right; }\
           ['li', {}, 'To export your entire playlist, just click export.'],
           ['li', {}, 'To only export songs with specific tags, enter them in the field below, then click export.']
         ],
+        ['br'],
         ['input#tagExport', { type : 'text' }],
         ['br'],
         ['div.rightAlign', {},

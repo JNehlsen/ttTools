@@ -16,6 +16,7 @@ ttTools = {
       type : 'text/css',
       rel  : 'stylesheet',
       href : 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/sunny/jquery-ui.css'
+      // href : 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/ui-darkness/jquery-ui.css'
     }).appendTo(document.head);
 
     this.views.menu.render();
@@ -50,7 +51,7 @@ ttTools = {
     this.autoDJ.setEnabled(false);
     this.autoVote.setEnabled(this.autoVote.enabled());
     this.autoVote.execute();
-    this.animations.setEnabled(this.animations.enabled());
+    //this.animations.setEnabled(this.animations.enabled());
     this.downVotes.downvotes = 0;
     this.downVotes.downvoters = [];
     // Override internals
@@ -248,35 +249,66 @@ ttTools = {
   animations : {
     enabled : function () {
       var enabled = $.cookie('ttTools_animations_enabled');
-      return enabled === null ? true : enabled === 'true';
+      return enabled === null ? true : enabled === 'true';     
     },
     setEnabled : function (enabled) {
       $.cookie('ttTools_animations_enabled', enabled);
       enabled ? ttTools.animations.enable() : ttTools.animations.disable();
     },
-    enable : function () {
-      if (ttObjects.manager.add_animation_to_ttTools)
-        ttObjects.manager.add_animation_to = ttObjects.manager.add_animation_to_ttTools;
-      if (ttObjects.manager.speak_ttTools)
-        ttObjects.manager.speak = ttObjects.manager.speak_ttTools;
-
-      $(Object.keys(ttObjects.manager.djs_uid)).each(function (index, uid) {
-        var dancer = ttObjects.manager.djs_uid[uid][0];
-        if (uid === ttObjects.room.currentDj)
-          return ttObjects.manager.add_animation_to(dancer, 'bob');
-        if ($.inArray(uid, ttObjects.room.upvoters) > -1)
-          return ttObjects.manager.add_animation_to(dancer, 'rock');
-      });
-
-      $(Object.keys(ttObjects.manager.listeners)).each(function (index, uid) {
-        var dancer = ttObjects.manager.listeners[uid];
-        if ($.inArray(uid, ttObjects.room.upvoters) > -1)
-          return ttObjects.manager.add_animation_to(dancer, 'rock');
-      });
-    },
+    speakers : $('.roomView img[src*="speaker"]').parent(),
+	enable : function () {
+		if (typeof BlackSwanCanvasDancer === 'function') {
+			ttObjects.manager.update_vote = ttObjects.voteAnim;
+			ttObjects.manager.set_active_dj = ttObjects.djAnim;
+			for (dj in ttObjects.manager.djs_uid) {
+				if (dj === ttObjects.room.currentDj){
+					ttObjects.manager.djs_uid[dj][0].setAnimation('bob');
+					ttObjects.manager.djs_uid[dj][0].start();
+				}
+				if ($.inArray(dj, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.djs_uid[dj][0].setAnimation('smallrock');
+					ttObjects.manager.djs_uid[dj][0].start();
+				}
+			}
+			for (listener in ttObjects.manager.listeners) {
+				if ($.inArray(listener, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.listeners[listener].setAnimation('rock');
+					ttObjects.manager.listeners[listener].start();
+                }
+            }
+        } else {
+			ttObjects.manager.add_animation_to = ttObjects.danceAnim;
+			for (dj in ttObjects.manager.djs_uid) {
+				if (dj === ttObjects.room.currentDj){
+					ttObjects.manager.add_animation_to(ttObjects.manager.djs_uid[dj][0], 'bob');
+				}
+				if ($.inArray(dj, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.add_animation_to(ttObjects.manager.djs_uid[dj][0], 'rock');
+				}
+			}
+			for (listener in ttObjects.manager.listeners) {
+				if ($.inArray(listener, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.add_animation_to(ttObjects.manager.listeners[listener], 'rock');
+				}
+			}
+        }
+        ttTools.animations.speakers.show();          
+	},
     disable : function () {
+    if (typeof BlackSwanCanvasDancer === 'function') {
+        // store / replace current functions
+        ttObjects.voteAnim = ttObjects.manager.update_vote;
+        ttObjects.djAnim = ttObjects.manager.set_active_dj;
+
+        ttObjects.manager.update_vote = $.noop;
+		ttObjects.manager.set_active_dj = function (pos) {
+            ttObjects.djAnim.call(ttObjects.manager, pos);
+			ttObjects.manager.djs[pos][1].stop();
+		};
+	  } else {
       ttObjects.manager.add_animation_to_ttTools = ttObjects.manager.add_animation_to;
       ttObjects.manager.add_animation_to = $.noop;
+      }
       ttObjects.manager.speak_ttTools = ttObjects.manager.speak;
       ttObjects.manager.speak = $.noop;
       $(Object.keys(ttObjects.manager.djs_uid)).each(function (index, uid) {
@@ -285,13 +317,17 @@ ttTools = {
       $(Object.keys(ttObjects.manager.listeners)).each(function (index, uid) {
         ttObjects.manager.listeners[uid].stop();
       });
-    }
+      $('.roomView img[src*="speaker"]').each(function (i, el) {
+  			speakers = $(el).parent();
+	  })
+	     ttTools.animations.speakers.hide();
+   }
   },
 
   idleIndicator : {
     threshold : function () {
       var threshold = $.cookie('ttTools_idleIndicator_threshold');
-      return threshold === 30 ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
+      return threshold === null ? (60 * ttTools.constants.time.minutes) : parseInt(threshold);
     },
     setThreshold : function (threshold) {
       $.cookie('ttTools_idleIndicator_threshold', threshold);
@@ -435,14 +471,36 @@ ttTools = {
     return Math.round(1000 * (millis / ttTools.constants.time.days))/1000 + 'd';
   },
   moveSongToBottom : function (fid) {
+  	console.log('moveSongToBottom');
     if ($.inArray(fid, Object.keys(turntable.playlist.songsByFid)) === -1) return;
-    var maxIndex = turntable.playlist.files.length - 1;
+    var maxIndex = ttObjects.songCount;
     maxIndex += (ttObjects.room.currentDj === turntable.user.id) ? -1 : 0;
     $(turntable.playlist.files).each(function (index, file) {
-      if (file.fileId !== fid) return;
+      if (file !== fid) return;
       if (index === maxIndex) return false;
       turntable.playlist.files.splice(index, 1);
       turntable.playlist.files.splice(maxIndex, 0, file);
+      turntable.playlist.updatePlaylist(null, true);
+      ttObjects.api({
+        api: "playlist.reorder",
+        playlist_name: "default",
+        index_from: index,
+        index_to: maxIndex
+      });
+      return false;
+    });
+  },
+    moveSongRandom : function (fid) {
+  	console.log('moveSongRandom');
+    if ($.inArray(fid, Object.keys(turntable.playlist.songsByFid)) === -1) return;
+    var maxIndex = ttObjects.songCount - 1;
+    maxIndex += (ttObjects.room.currentDj === turntable.user.id) ? -1 : 0;
+    var randomPosition = Math.floor(Math.random()*maxIndex)
+    $(turntable.playlist.files).each(function (index, file) {
+      if (file !== fid) return;
+      if (index === maxIndex) return false;
+      turntable.playlist.files.splice(index, 1);
+      turntable.playlist.files.splice(randomPosition, 0, file);
       turntable.playlist.updatePlaylist(null, true);
       ttObjects.api({
         api: "playlist.reorder",

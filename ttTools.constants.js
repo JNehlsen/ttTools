@@ -1,7 +1,7 @@
 ttTools.constants = {
   whatsNew : function () {
     return "\
-<h2>What's New in ttTools?</h2>\
+<h2>ttTools is back in business!</h2>\
 <br />\
 <h3>" +
   ttTools.constants.months[ttTools.release.getMonth()] + " " +
@@ -9,15 +9,15 @@ ttTools.constants = {
   ttTools.release.getFullYear() +
 "</h3>\
 <ul>\
-  <li>ttTools is now persistent when you change rooms via the 'List Rooms' or 'Random Room' buttons</li>\
-  <li>Images are pre-loaded as b64 blobs instead of downloading from github (hoping this fixes the \"missing bottom button\" issue)</li>\
+	<li>TTtools has been updated to work with the latest update of Turntable.fm</li>\
+	<li>New Website - <a href=\"http://tttools.html-5.me/\" target=\"_blank\">ttTools.html-5.me</a></li>\
 </ul>\
 <br/>";
   },
 
   donateButton : function () {
     return "\
-<h3>Do you &lt;3 ttTools?</h3>\
+<h3>Donate to the original author of ttTools</h3>\
 <form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='_blank'>\
 <input type='hidden' name='cmd' value='_s-xclick'>\
 <input type='hidden' name='hosted_button_id' value='ZNTHAXPNKMKBN'>\
@@ -31,8 +31,8 @@ ttTools.constants = {
     return "\
 <h3>Found a bug? Want a feature?</h3>\
 <p>\
-  It's impossible to keep track of bugs and feature requests unless they're centralized.<br/>\
-  <a href='https://github.com/egeste/ttTools/issues' target='_blank'>Please submit all bugs and feature requests here.</a>\
+  It's impossible to keep track of bugs and feature requests unless they're centralized.<br/><br/>\
+  <a href='https://github.com/JNehlsen/ttTools/issues' target='_blank'>Please submit all bugs and feature requests here.</a>\
 </p>\
 <br/>";
   },
@@ -75,5 +75,6 @@ ttTools.constants = {
     '4ddb2be9e8a6c45f6f000125', // SubFuze
     '4dee6cd24fe7d05893018656', // vin
     '4e0ff328a3f751670a084ba6', // YayRamen
+    '4eeb7653590ca257710024c0', // DangerousJax
   ]
 }

@@ -73,7 +73,9 @@ ttTools.portability = {
 
   exportPlaylist : function (tags) {
     if (!ttTools.database.isSupported() || (tags.length < 2 && tags[0] == '')) {
-      return window.location.href = 'data:text/json;charset=utf-8,' + JSON.stringify(turntable.playlist.files);
+    	var text='Download All Files ' + "<br /><br /> <a href='data:text/json;charset=utf-8," + JSON.stringify(turntable.playlist.files) + "'> Download Tagged Files </a><br /><small>Right-click the link above and select \"Download Linked Content\"</small>";
+      	$("<div id='dialog' title='Tagged Files'>" + text + "</div>").dialog({ width: 460 });
+      	return;
     }
     
     ttTools.tags.getAll(function (tx, result) {
@@ -91,14 +93,15 @@ ttTools.portability = {
 
       var playlist = [];
       $(turntable.playlist.files).each(function (index, file) {
-        if ($.inArray(file.fileId, matchFids) > -1) playlist.push(file);
+        if ($.inArray(file, matchFids) > -1) playlist.push(file);
       });
 
       if (playlist.length < 1) {
         return turntable.showAlert("You have no music tagged with " + tags.join(', '));
-      }
-
-      return window.location.href = 'data:text/json;charset=utf-8,' + JSON.stringify(playlist);
+      } else {
+        var text='Files tagged with '+ tags.join(', ') + "<br /><br /> <a href='data:text/json;charset=utf-8," + JSON.stringify(playlist) + "'> Download Tagged Files </a><br /><small>Right-click the link above and select \"Download Linked Content\"</small>";
+      	$("<div id='dialog' title='Tagged Files'>" + text + "</div>").dialog({ width: 460 });
+       }
     });
   }
 }

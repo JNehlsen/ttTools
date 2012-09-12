@@ -87,19 +87,20 @@ div#idleIndicatorDisplay, div#autoDJDisplay, div#autoVoteDisplay { text-align:ce
             click : util.hideOverlay
           }
         }],
+        ['br'],
         ['h1', 'ttTools'],
         ['div', {}, 'Released: ' + ttTools.release.toUTCString()],
         ['br'],
         ['div', {},
           ['span', {}, 'Auto Song-Drop Threshold '],
-          ['a', { href: 'http://tttools.egeste.net/features/extras#auto-drop-song', target: '_blank' }, '[?]']
+          ['a', { href: 'http://tttools.html-5.me/help, target: '_blank' }, '[?]']
         ],
         ['div#autoSongDrop', {}],
         ['div#autoSongDropDisplay', {}, ttTools.autoSongDrop.threshold() + ' songs'],
         ['br'],
         ['div', {},
           ['span', {}, 'Idle Indicator Threshold '],
-          ['a', { href: 'http://tttools.egeste.net/tutorials/understanding-the-idle-indicators', target: '_blank' }, '   [?]']
+          ['a', { href: 'http://tttools.html-5.me/help', target: '_blank' }, '   [?]']
         ],
         ['div#idleIndicatorThreshold', {}],
         ['div#idleIndicatorDisplay', {}, (ttTools.idleIndicator.threshold() / ttTools.constants.time.minutes) + 'm'],
@@ -126,6 +127,9 @@ div.modal { margin-top:15px !important; }\
 div.modal ul li {\
   font-size:16px;\
   text-align:left;\
+}\
+div.modal ul {\
+  padding-left:10px;\
 }\
       "}).appendTo($('div.modal'));
       $('div.modal div:first')
@@ -158,6 +162,7 @@ div#playlistTools {\
   height:2em;\
   padding:2px 0;\
   position:absolute;\
+  background:#ccc\
 }\
 div#songs {\
   top: 64px !important;\
@@ -198,11 +203,11 @@ div#playlistTools .custom-icons.soundcloud { background-position:34px 0; }\
         ttTools.autoDJ.setEnabled(!ttTools.autoDJ.enabled());
         ttTools.autoDJ.execute();
       }).prop('checked', ttTools.autoDJ.enabled()).button('refresh');
-
+	if (ttTools.animations) {
       $('input#animations').click(function (e) {
         ttTools.animations.setEnabled(!ttTools.animations.enabled());
       }).prop('checked', ttTools.animations.enabled()).button('refresh');      
-
+	}
       $('button#youtube')
         .button({
           text  : false,
@@ -495,13 +500,13 @@ div#guestDialog div.guest-list-container div.guests {\
       $('<style/>', {
         type : 'text/css',
         text : "\
-.playlist-container .song .goTop {\
+#playlist .song .goTop {\
   top:2px !important;\
-  left:10px !important;\
+  left:12px !important;\
 }\
-.playlist-container .song .goBottom {\
+#playlist .song .goBottom {\
   top:22px;\
-  left:0px;\
+  left:2px;\
   width:34px;\
   height:17px;\
   cursor:pointer;\
@@ -509,20 +514,14 @@ div#guestDialog div.guest-list-container div.guests {\
   background-position:0 17px !important;\
   background:url(" + ttTools.resources.bottomButton + ");\
 }\
-.playlist-container .song .goBottom:hover { background-position:0 0 !important; }\
-.playlist-container .song.topSong .goBottom { display:none; }\
+#playlist .song .goBottom:hover { background-position:0 0 !important; }\
+#playlist .song.topSong .goBottom { display:none; }\
       "}).appendTo(document.head);
     },
-
     update : function () {
-      $('div.realPlaylist div.song div.goBottom').remove();
-      $('<div class="goBottom"/>')
-        .on('click', function (e) {
-          e.stopPropagation();
-          var song = $(this).closest('.song').data('songData');
-          ttTools.moveSongToBottom(song.fileId);
-        })
-        .appendTo($('div.realPlaylist div.song'))
+//      $('div.goBottom').remove();
+      $('.goTop').after('<div class="goBottom"/>');
     }
   }
 }
+
