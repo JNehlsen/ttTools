@@ -806,9 +806,9 @@ ttTools = {
       turntable.playlist.setPlaylistHeight_ttTools = turntable.playlist.setPlaylistHeight;
     turntable.playlist.setPlaylistHeight = function (a) {
       var a = this.setPlaylistHeight_ttTools(a);
-      $(turntable.playlist.nodes.root).find(".queueView .songlist").css({
-          height: Math.max(a - 120, 55)
-      });
+//       $(turntable.playlist.nodes.root).find(".queueView .songlist").css({
+//           height: Math.max(a - 120, 55)
+//       });
       return a;
     }
   },
@@ -1614,9 +1614,10 @@ ttTools.tags.views = {
   cursor: pointer;\
   position: absolute;\
 }\
-.song .title {\
+.song-list .song .title {\
   height: 35px !important;\
   width: 145px;\
+  z-index: 2;\
 }\
       "}).appendTo(document.head);
     },
