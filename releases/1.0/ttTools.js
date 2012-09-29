@@ -11,8 +11,20 @@
 	http://www.opensource.org/licenses/mit-license.php
 
 	ben@xoxco.com
+	
+	Thanks to James Padolsey (http://james.padolsey.com/) for help with the scroll stop and start functions
 
 */
+
+$(document).ready(function() {
+	$('#song-search-input').keyup(function() {
+      if ( $('#song-search-input').val().length === 0 ) {
+    	$('.songs .song .goBottom').remove(); 
+        $('.goTop').after('<div class="goBottom"/>');
+     	ttTools.tags.views.playlist.update();
+      }
+    });
+});
 
 (function($) {
 
@@ -361,7 +373,8 @@ ttObjects = {
     }
     return false;
   },
-
+  songCount : turntable.playlist.files.length - 1,
+  playlist : turntable.playlist.files,
   manager : null,
   getManager : function() {
     for (var memberName in ttObjects.getRoom()) {
@@ -389,7 +402,9 @@ ttObjects = {
     }
     return false;
   }
-};ttTools = {
+};
+
+ttTools = {
 
   roomLoaded : function () {
     var defer = $.Deferred();
@@ -407,6 +422,7 @@ ttObjects = {
       type : 'text/css',
       rel  : 'stylesheet',
       href : 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/sunny/jquery-ui.css'
+      // href : 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/ui-darkness/jquery-ui.css'
     }).appendTo(document.head);
 
     this.views.menu.render();
@@ -441,7 +457,7 @@ ttObjects = {
     this.autoDJ.setEnabled(false);
     this.autoVote.setEnabled(this.autoVote.enabled());
     this.autoVote.execute();
-    this.animations.setEnabled(this.animations.enabled());
+    //this.animations.setEnabled(this.animations.enabled());
     this.downVotes.downvotes = 0;
     this.downVotes.downvoters = [];
     // Override internals
@@ -639,35 +655,67 @@ ttObjects = {
   animations : {
     enabled : function () {
       var enabled = $.cookie('ttTools_animations_enabled');
-      return enabled === null ? true : enabled === 'true';
+      return enabled === null ? true : enabled === 'true';     
     },
     setEnabled : function (enabled) {
       $.cookie('ttTools_animations_enabled', enabled);
       enabled ? ttTools.animations.enable() : ttTools.animations.disable();
     },
-    enable : function () {
-      if (ttObjects.manager.add_animation_to_ttTools)
-        ttObjects.manager.add_animation_to = ttObjects.manager.add_animation_to_ttTools;
-      if (ttObjects.manager.speak_ttTools)
-        ttObjects.manager.speak = ttObjects.manager.speak_ttTools;
-
-      $(Object.keys(ttObjects.manager.djs_uid)).each(function (index, uid) {
-        var dancer = ttObjects.manager.djs_uid[uid][0];
-        if (uid === ttObjects.room.currentDj)
-          return ttObjects.manager.add_animation_to(dancer, 'bob');
-        if ($.inArray(uid, ttObjects.room.upvoters) > -1)
-          return ttObjects.manager.add_animation_to(dancer, 'rock');
-      });
-
-      $(Object.keys(ttObjects.manager.listeners)).each(function (index, uid) {
-        var dancer = ttObjects.manager.listeners[uid];
-        if ($.inArray(uid, ttObjects.room.upvoters) > -1)
-          return ttObjects.manager.add_animation_to(dancer, 'rock');
-      });
-    },
+    speakers : $('.roomView img[src*="speaker"]').parent(),
+	enable : function () {
+		if (typeof BlackSwanCanvasDancer === 'function') {
+			ttObjects.manager.update_vote = ttObjects.voteAnim;
+			ttObjects.manager.set_active_dj = ttObjects.djAnim;
+			for (dj in ttObjects.manager.djs_uid) {
+				if (dj === ttObjects.room.currentDj){
+					ttObjects.manager.djs_uid[dj][0].setAnimation('bob');
+					ttObjects.manager.djs_uid[dj][0].start();
+				}
+				if ($.inArray(dj, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.djs_uid[dj][0].setAnimation('smallrock');
+					ttObjects.manager.djs_uid[dj][0].start();
+				}
+			}
+			for (listener in ttObjects.manager.listeners) {
+				if ($.inArray(listener, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.listeners[listener].setAnimation('rock');
+					ttObjects.manager.listeners[listener].start();
+                }
+            }
+        } else {
+			ttObjects.manager.add_animation_to = ttObjects.danceAnim;
+			for (dj in ttObjects.manager.djs_uid) {
+				if (dj === ttObjects.room.currentDj){
+					ttObjects.manager.add_animation_to(ttObjects.manager.djs_uid[dj][0], 'bob');
+				}
+				if ($.inArray(dj, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.add_animation_to(ttObjects.manager.djs_uid[dj][0], 'rock');
+				}
+			}
+			for (listener in ttObjects.manager.listeners) {
+				if ($.inArray(listener, ttObjects.room.upvoters) !== -1) {
+					ttObjects.manager.add_animation_to(ttObjects.manager.listeners[listener], 'rock');
+				}
+			}
+        }
+        ttTools.animations.speakers.show();  
+        ttObjects.manager.speak = ttObjects.manager.speak_ttTools;  
+	},
     disable : function () {
+    if (typeof BlackSwanCanvasDancer === 'function') {
+        // store / replace current functions
+        ttObjects.voteAnim = ttObjects.manager.update_vote;
+        ttObjects.djAnim = ttObjects.manager.set_active_dj;
+
+        ttObjects.manager.update_vote = $.noop;
+		ttObjects.manager.set_active_dj = function (pos) {
+            ttObjects.djAnim.call(ttObjects.manager, pos);
+			ttObjects.manager.djs[pos][1].stop();
+		};
+	  } else {
       ttObjects.manager.add_animation_to_ttTools = ttObjects.manager.add_animation_to;
       ttObjects.manager.add_animation_to = $.noop;
+      }
       ttObjects.manager.speak_ttTools = ttObjects.manager.speak;
       ttObjects.manager.speak = $.noop;
       $(Object.keys(ttObjects.manager.djs_uid)).each(function (index, uid) {
@@ -676,7 +724,11 @@ ttObjects = {
       $(Object.keys(ttObjects.manager.listeners)).each(function (index, uid) {
         ttObjects.manager.listeners[uid].stop();
       });
-    }
+      $('.roomView img[src*="speaker"]').each(function (i, el) {
+  			speakers = $(el).parent();
+	  })
+	     ttTools.animations.speakers.hide();
+   }
   },
 
   idleIndicator : {
@@ -769,9 +821,10 @@ ttObjects = {
       turntable.playlist.setPlaylistHeight_ttTools = turntable.playlist.setPlaylistHeight;
     turntable.playlist.setPlaylistHeight = function (a) {
       var a = this.setPlaylistHeight_ttTools(a);
-      $(turntable.playlist.nodes.root).find(".queueView .songlist").css({
-          height: Math.max(a - 120, 55)
-      });
+// What did this do? It is broken now and TT seems to work without it      
+//       $(turntable.playlist.nodes.root).find(".main-pane #songs").css({
+//           height: Math.max(a - 120, 55)
+//       });
       return a;
     }
   },
@@ -826,14 +879,37 @@ ttObjects = {
     return Math.round(1000 * (millis / ttTools.constants.time.days))/1000 + 'd';
   },
   moveSongToBottom : function (fid) {
+  	console.log('moveSongToBottom');
     if ($.inArray(fid, Object.keys(turntable.playlist.songsByFid)) === -1) return;
-    var maxIndex = turntable.playlist.files.length - 1;
+    var maxIndex = ttObjects.songCount;
+    var playlist = ttObjects.playlist;
     maxIndex += (ttObjects.room.currentDj === turntable.user.id) ? -1 : 0;
+    $(playlist).each(function (index, file) {
+      if (file !== fid) return;
+      if (index === maxIndex) return false;
+      playlist.splice(index, 1);
+      playlist.splice(maxIndex, 0, file);
+      turntable.playlist.updatePlaylist(null, true);
+      ttObjects.api({
+        api: "playlist.reorder",
+        playlist_name: "default",
+        index_from: index,
+        index_to: maxIndex
+      });
+      return false;
+    });
+  },
+    moveSongRandom : function (fid) {
+  	console.log('moveSongRandom');
+    if ($.inArray(fid, Object.keys(turntable.playlist.songsByFid)) === -1) return;
+    var maxIndex = ttObjects.songCount - 1;
+    maxIndex += (ttObjects.room.currentDj === turntable.user.id) ? -1 : 0;
+    var randomPosition = Math.floor(Math.random()*maxIndex)
     $(turntable.playlist.files).each(function (index, file) {
-      if (file.fileId !== fid) return;
+      if (file !== fid) return;
       if (index === maxIndex) return false;
       turntable.playlist.files.splice(index, 1);
-      turntable.playlist.files.splice(maxIndex, 0, file);
+      turntable.playlist.files.splice(randomPosition, 0, file);
       turntable.playlist.updatePlaylist(null, true);
       ttObjects.api({
         api: "playlist.reorder",
@@ -934,19 +1010,20 @@ div#idleIndicatorDisplay, div#autoDJDisplay, div#autoVoteDisplay { text-align:ce
             click : util.hideOverlay
           }
         }],
+        ['br'],
         ['h1', 'ttTools'],
         ['div', {}, 'Released: ' + ttTools.release.toUTCString()],
         ['br'],
         ['div', {},
           ['span', {}, 'Auto Song-Drop Threshold '],
-          ['a', { href: 'http://tttools.egeste.net/features/extras#auto-drop-song', target: '_blank' }, '[?]']
+          ['a', { href: 'http://tttools.html-5.me/help, target: \'_blank\'' }, '[?]']
         ],
         ['div#autoSongDrop', {}],
         ['div#autoSongDropDisplay', {}, ttTools.autoSongDrop.threshold() + ' songs'],
         ['br'],
         ['div', {},
           ['span', {}, 'Idle Indicator Threshold '],
-          ['a', { href: 'http://tttools.egeste.net/tutorials/understanding-the-idle-indicators', target: '_blank' }, '   [?]']
+          ['a', { href: 'http://tttools.html-5.me/help', target: '_blank' }, '   [?]']
         ],
         ['div#idleIndicatorThreshold', {}],
         ['div#idleIndicatorDisplay', {}, (ttTools.idleIndicator.threshold() / ttTools.constants.time.minutes) + 'm'],
@@ -973,6 +1050,9 @@ div.modal { margin-top:15px !important; }\
 div.modal ul li {\
   font-size:16px;\
   text-align:left;\
+}\
+div.modal ul {\
+  padding-left:10px;\
 }\
       "}).appendTo($('div.modal'));
       $('div.modal div:first')
@@ -1001,10 +1081,14 @@ div.queueView div.resultsLabel {\
 div#playlistTools {\
   left:0;\
   right:0;\
-  top:65px;\
+  top:36px;\
   height:2em;\
   padding:2px 0;\
   position:absolute;\
+  background:#ccc\
+}\
+div#songs {\
+  top: 64px !important;\
 }\
 div#playlistTools div { float:left; }\
 div#playlistTools label { font-size:5px; }\
@@ -1019,7 +1103,7 @@ div#playlistTools .custom-icons.soundcloud { background-position:34px 0; }\
       "}).appendTo(document.head);
 
       $(util.buildTree(this.tree())).insertAfter(
-        $('form.playlistSearch')
+        $('#queue-header')
       );
 
       $('div#buttons').buttonset();
@@ -1042,11 +1126,11 @@ div#playlistTools .custom-icons.soundcloud { background-position:34px 0; }\
         ttTools.autoDJ.setEnabled(!ttTools.autoDJ.enabled());
         ttTools.autoDJ.execute();
       }).prop('checked', ttTools.autoDJ.enabled()).button('refresh');
-
+	if (ttTools.animations) {
       $('input#animations').click(function (e) {
         ttTools.animations.setEnabled(!ttTools.animations.enabled());
       }).prop('checked', ttTools.animations.enabled()).button('refresh');      
-
+	}
       $('button#youtube')
         .button({
           text  : false,
@@ -1339,13 +1423,13 @@ div#guestDialog div.guest-list-container div.guests {\
       $('<style/>', {
         type : 'text/css',
         text : "\
-.playlist-container .song .goTop {\
+#playlist .song .goTop {\
   top:2px !important;\
-  left:10px !important;\
+  left:12px !important;\
 }\
-.playlist-container .song .goBottom {\
+#playlist .song .goBottom {\
   top:22px;\
-  left:0px;\
+  left:2px;\
   width:34px;\
   height:17px;\
   cursor:pointer;\
@@ -1353,23 +1437,17 @@ div#guestDialog div.guest-list-container div.guests {\
   background-position:0 17px !important;\
   background:url(" + ttTools.resources.bottomButton + ");\
 }\
-.playlist-container .song .goBottom:hover { background-position:0 0 !important; }\
-.playlist-container .song.topSong .goBottom { display:none; }\
+#playlist .song .goBottom:hover { background-position:0 0 !important; }\
+#playlist .song.topSong .goBottom { display:none; }\
       "}).appendTo(document.head);
     },
-
     update : function () {
-      $('div.realPlaylist div.song div.goBottom').remove();
-      $('<div class="goBottom"/>')
-        .on('click', function (e) {
-          e.stopPropagation();
-          var song = $(this).closest('.song').data('songData');
-          ttTools.moveSongToBottom(song.fileId);
-        })
-        .appendTo($('div.realPlaylist div.song'))
+//      $('div.goBottom').remove();
+      $('.goTop').after('<div class="goBottom"/>');
     }
   }
 }
+
 ttTools.database = {
 
   dbName        : 'ttTools.database',
@@ -1383,8 +1461,16 @@ ttTools.database = {
   },
 
   getDatabase : function () {
+  	try {
     if (this.dbHandle) { return this.dbHandle; }
     this.dbHandle = openDatabase(this.dbName, this.dbVersion, this.dbDisplayName, this.dbMaxSize);
+    } catch(e) {
+    	if (e == 2) {
+          alert("Invalid database version.");
+      } else {
+          alert("Unknown error "+e+".");
+      }
+    }
     return this.dbHandle;
   },
 
@@ -1536,21 +1622,26 @@ ttTools.tags.views = {
       $('<style/>', {
         type : 'text/css',
         text : "\
-div.song div.ui-icon-tag {\
+.song .ui-icon-tag{\
   margin: 0;\
-  top: 24px;\
-  right: 5px;\
+  top: -4px;\
+  right: 0;\
   width: 16px;\
   height: 16px;\
   cursor: pointer;\
   position: absolute;\
 }\
+.song-list .song .title {\
+  height: 35px !important;\
+  width: 145px;\
+  z-index: 2;\
+}\
       "}).appendTo(document.head);
     },
 
     update : function () {
-      $('div.song div.ui-icon-tag').remove();
-      var elements = $('div.song')
+      $('.song .ui-icon-tag').remove();
+      var elements = $('.song .title')
         .unbind('click')
         .on('click', function(e) {
           ttTools.tags.views.add.render($(this).closest('.song').data('songData'));
@@ -1703,7 +1794,9 @@ ttTools.portability = {
 
   exportPlaylist : function (tags) {
     if (!ttTools.database.isSupported() || (tags.length < 2 && tags[0] == '')) {
-      return window.location.href = 'data:text/json;charset=utf-8,' + JSON.stringify(turntable.playlist.files);
+    	var text='Download All Files ' + "<br /><br /> <a href='data:text/json;charset=utf-8," + JSON.stringify(turntable.playlist.files) + "'> Download Tagged Files </a><br /><small>Right-click the link above and select \"Download Linked Content\"</small>";
+      	$("<div id='dialog' title='Tagged Files'>" + text + "</div>").dialog({ width: 460 });
+      	return;
     }
     
     ttTools.tags.getAll(function (tx, result) {
@@ -1721,14 +1814,15 @@ ttTools.portability = {
 
       var playlist = [];
       $(turntable.playlist.files).each(function (index, file) {
-        if ($.inArray(file.fileId, matchFids) > -1) playlist.push(file);
+        if ($.inArray(file, matchFids) > -1) playlist.push(file);
       });
 
       if (playlist.length < 1) {
         return turntable.showAlert("You have no music tagged with " + tags.join(', '));
-      }
-
-      return window.location.href = 'data:text/json;charset=utf-8,' + JSON.stringify(playlist);
+      } else {
+        var text='Files tagged with '+ tags.join(', ') + "<br /><br /> <a href='data:text/json;charset=utf-8," + JSON.stringify(playlist) + "'> Download Tagged Files </a><br /><small>Right-click the link above and select \"Download Linked Content\"</small>";
+      	$("<div id='dialog' title='Tagged Files'>" + text + "</div>").dialog({ width: 460 });
+       }
     });
   }
 }
@@ -1795,7 +1889,7 @@ div#importProgress {\
         text : "\
 div.portability.modal.dropzone { border-style:dotted; }\
 div.portability.modal.dropzone * { visibility: hidden; }\
-div.portability.modal ul { text-align: left; }\
+div.portability.modal ul { text-align: left; padding-left:10px;}\
 div.portability.modal div.rightAlign { text-align: right; }\
       "}).appendTo($('div.portability.modal'));
 
@@ -1834,7 +1928,13 @@ div.portability.modal div.rightAlign { text-align: right; }\
           util.hideOverlay();
           for (var i = 0; i < e.dataTransfer.files.length; i++) {
             var file = e.dataTransfer.files[i];
+            if (typeof FileReader == "undefined") {
+            var text = "<b>Sorry</b><br />This action is not supported in your brower currently";
+            $("<div id='dialog' title='Not Supported'>" + text + "</div>").dialog();
+            return;
+            } else {
             var reader = new FileReader();
+            }
             reader.onload = function () {
               $('div#importProgress')
                 .show()
@@ -1859,6 +1959,7 @@ div.portability.modal div.rightAlign { text-align: right; }\
             click : util.hideOverlay
           }
         }],
+        ['br'],
         ['h1', 'Import/Export'],
         ['br'],
         ['ul', {},
@@ -1866,6 +1967,7 @@ div.portability.modal div.rightAlign { text-align: right; }\
           ['li', {}, 'To export your entire playlist, just click export.'],
           ['li', {}, 'To only export songs with specific tags, enter them in the field below, then click export.']
         ],
+        ['br'],
         ['input#tagExport', { type : 'text' }],
         ['br'],
         ['div.rightAlign', {},
@@ -1878,7 +1980,7 @@ div.portability.modal div.rightAlign { text-align: right; }\
 ttTools.constants = {
   whatsNew : function () {
     return "\
-<h2>What's New in ttTools?</h2>\
+<h2>ttTools is back in business!</h2>\
 <br />\
 <h3>" +
   ttTools.constants.months[ttTools.release.getMonth()] + " " +
@@ -1886,15 +1988,15 @@ ttTools.constants = {
   ttTools.release.getFullYear() +
 "</h3>\
 <ul>\
-  <li>ttTools is now persistent when you change rooms via the 'List Rooms' or 'Random Room' buttons</li>\
-  <li>Images are pre-loaded as b64 blobs instead of downloading from github (hoping this fixes the \"missing bottom button\" issue)</li>\
+	<li>TTtools has been updated to work with the latest update of Turntable.fm</li>\
+	<li>New Website - <a href=\"http://tttools.html-5.me/\" target=\"_blank\">ttTools.html-5.me</a></li>\
 </ul>\
 <br/>";
   },
 
   donateButton : function () {
     return "\
-<h3>Do you &lt;3 ttTools?</h3>\
+<h3>Donate to the original author of ttTools</h3>\
 <form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='_blank'>\
 <input type='hidden' name='cmd' value='_s-xclick'>\
 <input type='hidden' name='hosted_button_id' value='ZNTHAXPNKMKBN'>\
@@ -1908,8 +2010,8 @@ ttTools.constants = {
     return "\
 <h3>Found a bug? Want a feature?</h3>\
 <p>\
-  It's impossible to keep track of bugs and feature requests unless they're centralized.<br/>\
-  <a href='https://github.com/egeste/ttTools/issues' target='_blank'>Please submit all bugs and feature requests here.</a>\
+  It's impossible to keep track of bugs and feature requests unless they're centralized.<br/><br/>\
+  <a href='https://github.com/JNehlsen/ttTools/issues' target='_blank'>Please submit all bugs and feature requests here.</a>\
 </p>\
 <br/>";
   },
@@ -1952,11 +2054,88 @@ ttTools.constants = {
     '4ddb2be9e8a6c45f6f000125', // SubFuze
     '4dee6cd24fe7d05893018656', // vin
     '4e0ff328a3f751670a084ba6', // YayRamen
+    '4eeb7653590ca257710024c0', // DangerousJax
   ]
 }
 ttTools.resources = {
   customIcons : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAQCAYAAAC7mUeyAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABv9JREFUeNq0lmtsFNcZht+Z2dn17vqy9taXmCguwVcaF1PbtCSgIgRIBREH0uLKaqRWqqX+KAhISyu1KVRtpcqtmorwI7+QWimRaFOThmAkiErtiqaUuIqxbC5xsB1qbGNj731ndi6n7xl8oVbyzxzp7MyeObfnfO/3fUcRQmDr1q2QJRwOd6qq+oaiKEdZT7muG5PtfMenlfPnz2O1yqFDhzpbW1u/qeu6xpInC/cTfPDgQfrGjRu3xsfHh+Lx+MDY2Njl/v7+1MrxksMnX7hpryGbzX6RG485jrOXE/3a5/PlsZPxWTCrWRobG1/gpre3t7djw4YNS+3JZBLNzc0bg8EgBgcHna6urm+w+eynzeHBmKaJheffCPITbr6bJ/Qq3zex/pRQrfwcZL3E2ve4gOQ+crnc/7UREN3d3Whra8PVq1c19sl91ngPZmJqCj6ePiGu+/3+Ddz899j8Iq3yLz53sV3ls5i1QPY3aFJnlUGi0WgeTx2UmPc/nU4jFotJtaC+vh7T09Ne2/r16zuqq6u/ZFmWKCwsFLZtpwj5lsTwYCpZR3giFNP9oGV9rPp8MzwhqS1HSJ/hk9XOEcJk3eHXUbaw6GoVHmJQgkjLDA8PI5FIgG6DyspKtLS04N69eygoKMC6des6qBpkMhnPlwmFI0eO6Jzitx7MPyufQO/cA/xyLib+QfqKvLzUXVdU2sJdm69pf0jbdjutVFQd8P/pVEE+vqYHofsDy843dQvCNqD4OF0oAmHMQaSmoEbr4M4ONjo33nzZHbvUBk031UjNO/qOUz9CtG7evf4OlOKnoFa1gmoIy7kmJydhGIbnN0VFRd78lDpqamq8Ksv8/DwYqDyr3bx5E7ROYElmoIq+qutVz0SLm7qjJee2a9r2K5lMwgCmW4NBY8BxRi1FSTSFgk9tBjbHU+l+RdVyxSuPV6rRygbE5IfPiuTkk87sR4b73/f38v8WxNIRqBrc6b5OS/lZhW/nb54XmXko0bWLowvlJiVIWVkZLl++jGvXruHw4cMoLS31gHp6erznzp07PQtKoLm5OQnjLsFYhtGWiJb+RfH7tZe4oJqI49ulZVBCYSRLP/fil8M8NC7gVFXBqa1FoKfngtXX28Whf/e2wTHQA7RODu6dvhfE+PvPwbHCws6GhJHMR0axkCEoF4cogDv43l4n8NpuJVz+b/jDswsWiU9MTMiNeZuUYAMDA568JEwqlcKZM2e89oaGBlRUVHh9t2zZIgOE8wiMeTD8yiuavmcP7KEhON/tRCadAfIop+8fRPKHP4Ayx1OcuAft7l34amt3YD42vAgjsvECMTncLCTA6AebRCpeQpgQHNuPnFmEtOtH+qHzLfzAufLGWww5CXrLCXVX3evnzp1rZ/5oph9UMd9858CBAzUbN25EXV2d1z8/Px/79+/HXa4fiUS8tlAoJH1N+o5YlllhfsT9+XGo7GT//ndIf2UTFCuHQDKFwuIiTO/ejfz3LsF+7lkI6jjUf01TYnNLTuP2/vGgm5xtQC7jQyYWIQRBLD9X0GCZIZgWYZRFjodAwgwSPui83dXl2/Xy62fPnr3FD7LixIkTTzLP1TQ1NS0pWAYHCbPoMzI3so+Xh+R5LsEofi0ohA7BNdRoCcpe+hYEB5i9vVAJVPH8XmThItD4DHyfXwvz+oeqOzO9HM5Shl/JOD5YLqufccNnKK7O+G3rsBxKjFBJylp9NPny3bShBAqSK12PIXhW+o6MZo8W6S+yXfqL/CatIiUpz3NZZnwVrAHy2ayCAdmlTzlc0KGDuY7NlBmC9kQlch+PwLo/A9cwlxZRd3S+KsaHm0QmWaJYZr4wMnkwUiFYuSAnDmBsqEFMzTXAp7vLO7NVpWjdvLb/x79YCUMrzN65cwcXL17Etm3bIC0kAWRSlTCy8JrjWYj5SUIuw6RzdlbkbC/FZy0HQRK71Khp2aTXie2H7fKgr1yBwbjuZA3hpDJu6SJMbUsctS29q5VzmDvmZZ7p63t42ViU2+nTp72gcPToUYyOjno5hlYc5n3tXW8f8ieRs2ZS3HiKySrJiGLOzCLHE0h+8glMOr5jO7j/9l9hF0UQqq5BfHQsFzdz6cd1rZmamhohjHXs2DHsYVCSmV/6SHFxsfcuIxxvAdJKyZMnTx5krhnxhCtvmx/UN36dnf8saEaGZyY9w7uFqtSlWLi30URStFSNgN+n9ea5zq/Wj41cWi2AlZfZjo6OPQy/m5k469asWfM0w3Ml/0cpQV32lf5z/PjxQxcuXHht8dbswfyn7guaYdkdFF6jUFTqylUXZlfY62G0UFWXJFKciZJs5kx5MnGrLBUXjwvm0bJv374SHnYFHb6Ktb68vLzx9u3bHw0NDXVRbs4izP8EGAAhk5qy4vQAxAAAAABJRU5ErkJggg==",
   bottomButton : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAjCAYAAADxG9hnAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODhDNkVBNURFMTFBNjMxNyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpGOEY5RTg3NDcxNzcxMUUxOTZFQkQwNDQ5QUJBNzAwNyIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpGOEY5RTg3MzcxNzcxMUUxOTZFQkQwNDQ5QUJBNzAwNyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjAyODAxMTc0MDcyMDY4MTE4QzE0RjFDOUZFMkU2MUFDIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY3N0YxMTc0MDcyMDY4MTE4OEM2RUE1REUxMUE2MzE3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+aPVoDAAAArNJREFUeNrslktvUkEUx2fuvTx1QwmG2l3lG5CwYCMadMmiCca4M32QmuBrUfoRrC58JW3oI+7USOKCpRDFDQvi/QbYbYmEslHe945n2nOT0TRleFWbcJKTO8zc+c/vnhkmf8oYIzLxftGzqVKyqlCp14kJsgYjW7f36vdk3teIZDg0krzoUOZsKon1Y+Gf1jVI9mfbTMrqU9mK8PiUnHEBTEFTSYieAtEzSAkgIjdfHzYnAsIjf9/ru+CgRU0hgZPGeyYp/2qzcPRVrTqI7sAgPD4/8AbcdlpUFeIT+w2TVBsdFr7+slYeVHMoEB5fHnpDAFOAw+vCw9kEiMi1F7XSMHpDg/D4+sgbc9roR95uddnC1ee17LBaI4EgzGN4qADxbBSdkUHGFf8PSGnNm4LnE8gZyLrkvBVID+QGZBAyDrk+CogyxBwOkBZ+8/b8qBURQXJ4MX7DxawvP8T+HC5oQfAqpoSKfBD6GabVlxK0La2c0P4DZAO3x4NiQVyUl9y60blwAtvrOEeHzEDewgU5/BXUCqIWEebw+VF+SUPewHZcBMnjGamjQBT7M8J4sE+F+fg+Zh0ho8K4LpzDvHgmRZA4VsODE/JCP0FBvQ+Ijts3jzpBQUf6jFjnYR9LqGMZrT0nWP46iltnJIOwOdyqbcjvqKXL/pvO34V25+mlTUUlq1TSoXFZ0yBbb9d+jNehaXaadLjpnKLRGJGwaGaPZdsNNhmHtpT2u+xuWlBVGiKnWDTDYKVOg0V2E5XJObTlHb/P7lKKsE0nOjTYjnKnaYZ3liuTd2gru/6AzXkE4/sLotptmeHtpcrZObTE3mzI5qQFqhw7NGaSZrfFIunFg7N3aIk3szGb/dihdTtsIX334N85NIA5cmgAMXVoYw0t+e7y1KFNHdrUoZ1Lh/ZbgAEA9opWGtX4ApQAAAAASUVORK5CYII=",
 }
-ttTools.release = new Date(1333399882000);
+ttTools.release = new Date(1347062400000);
 $.when(ttTools.roomLoaded()).then($.proxy(ttTools.init, ttTools));
+
+(function(){   
+    var special = $.event.special,
+        scrollCatch1 = 'S' + (+new Date()),
+        scrollCatch2 = 'S' + (+new Date() + 1);       
+
+    special.scrollstart = {
+        setup: function() {           
+            var timer,
+                handler =  function(evt) {                   
+                    var _self = this,
+                        _args = arguments;
+                    if (timer) {
+                        clearTimeout(timer);
+                    } else {
+                        evt.type = 'scrollstart';
+                        jQuery.event.handle.apply(_self, _args);
+                    }
+                    timer = setTimeout( function(){
+                        timer = null;
+                    }, special.scrollstop.latency);                   
+                };            
+            jQuery(this).bind('scroll', handler).data(scrollCatch1, handler);            
+        },
+        teardown: function(){
+            jQuery(this).unbind( 'scroll', jQuery(this).data(scrollCatch1) );
+        }
+    };
+    
+    special.scrollstop = {
+        latency: 300,
+        setup: function() {            
+            var timer,
+                    handler = function(evt) {                    
+                    var _self = this,
+                        _args = arguments;                    
+                    if (timer) {
+                        clearTimeout(timer);
+                    }                    
+                    timer = setTimeout( function(){                        
+                        timer = null;
+                        evt.type = 'scrollstop';
+                        jQuery.event.handle.apply(_self, _args);                        
+                    }, special.scrollstop.latency);                    
+                };            
+            jQuery(this).bind('scroll', handler).data(scrollCatch2, handler);            
+        },
+        teardown: function() {
+            jQuery(this).unbind( 'scroll', jQuery(this).data(scrollCatch2) );
+        }
+    };
+    
+})();
+            
+(function(){
+//  This is how to detect a scroll start event. I am not using it now, but could be useful in the future           
+//     $('#songs').bind('scrollstart', function(){       
+//         console.log('InnerScrollStart');
+//     });
+            
+    $('#songs').bind('scrollstop', function(e){
+    	$('.songs .song .goBottom').remove(); 
+        $('.goTop').after('<div class="goBottom"/>');
+     	ttTools.tags.views.playlist.update();
+    });
+})();
+
+$('#songs').on("click", ".goBottom", function (event)
+	{
+    var $target = $(event.target); // the element that fired the original click event
+	event.stopPropagation();
+    var song = $target.closest('.song').data('songData');
+    ttTools.moveSongToBottom(song.fileId);
+});
+
+//$(turntable.playlist.files).each(ttTools.moveSongRandom);
